@@ -1,0 +1,115 @@
+syntax = "proto2";
+option java_package = "de.lhtechnologies";
+
+message DroneMessage {
+	enum FlightMode {
+		m_degraded = 0;
+		m_passThrough = 1;
+		m_flybywire = 2;
+		m_autonomous = 3;
+		m_autonomous_return_to_base = 4;
+	}
+
+	message Position {
+		optional int32 timestamp = 20;
+		optional float real_time = 21;
+	
+		required float latitude = 22;
+		required float longitude = 23;
+		optional int32 gps_altitude = 25;
+		optional int32 numberOfSatellites = 26;
+	}
+	
+	message Velocity {	
+		optional int32 timestamp = 30;
+	
+		required int32 speed = 31;
+		required int32 course_over_ground = 32;
+		optional sint32 rate_of_climb = 33;
+	}
+	
+	message Attitude {
+		optional int32 timestamp = 40;
+		
+		required sint32 course_magnetic = 41;
+		required sint32 pitch = 42;
+		required sint32 roll = 43;
+	}
+	
+	message BaroData {
+		required int32 timestamp = 50;
+		
+		required float pressure = 51;
+		required float temperature = 52;
+	}
+	
+	message ThreeDimensionalData {
+		required int32 timestamp = 60;
+		
+		required float x = 61;
+		required float y = 62;
+		required float z = 63;
+	}
+	
+	message BatteryData {
+		optional int32 timestamp = 70;
+		
+		required int32 voltage = 71;
+		required int32 current = 72;
+	}
+	
+	message CommandSet {
+		required int32 yaw = 80;
+		required int32 pitch = 81;
+		required int32 thrust = 82;
+	}
+	
+	message AutonomousUpdate {
+		optional int32 altitude = 90; //Centimeters
+		optional sint32 pitchAngle = 91; //Relative value, signed 8-bit integer
+
+		optional int32 heading = 92; //64*degrees
+		optional sint32 rateOfTurn = 93; //Relative value, signed 8-bit integer
+	}
+	
+	message Waypoint {	
+		optional int32 timestamp = 100;
+	
+		required float latitude = 101;
+		required float longitude = 102;
+		required int32 altitude = 103;
+
+		optional uint32 orbitRadius = 104;
+		optional bool orbitUntilTargetAltitude = 105;
+		optional bool orbitClockwise = 106;
+	}
+	
+	//A timestamp
+	optional int32 timestamp = 1;
+	
+	optional FlightMode current_mode = 2;
+	optional Velocity current_speed = 3;
+	optional Position current_position = 4;
+	optional Attitude current_attitude = 5;
+	optional int32 current_altitude = 6;
+	
+	optional BaroData bmp_raw = 7;
+	optional ThreeDimensionalData gyro_raw = 8;
+	optional ThreeDimensionalData mag_raw = 9;
+	optional ThreeDimensionalData accel_raw = 10;
+	optional BatteryData current_battery_data = 11;
+	optional CommandSet output_command_set = 12;
+	
+	//Now the "input" messages
+	
+	//Control messages
+	optional CommandSet input_command_set = 13;
+	optional AutonomousUpdate autonomous_update = 14;
+	
+	//Configureation updates
+	optional float sea_level_pressure = 15;
+	optional Waypoint home_base = 17;
+	
+	//The route
+	repeated Waypoint route = 18;
+}

@@ -1,115 +1,169 @@
 syntax = "proto2";
 option java_package = "de.lhtechnologies";
 
+//Design considerations: Use small datatypes for stuff that gets transmitted over the air
+//Use fixed datatypes for stuff that only gets transmitted over the serial link
+//Use fixed-point representations if it makes sense and the data is also fixed-point at the source
+//(e.g. it's unnecessary for gpx data)
+//Timestamps are in microseconds + milliseconds*1000 (so microsecond accuracy
+
+//Waypoints are used both to compose the route (which is a different message from the drone message since it never goes to the flight controller, only between planning system and flight management cimputer) and to update the home base waypoint on the 
+message Waypoint {	
+	optional fixed64 timestamp = 200; //Microseconds
+
+	required float latitude = 201; //Degrees
+	required float longitude = 202; //Degrees
+	required int32 altitude = 203;  //centimeters
+
+	optional uint32 orbit_radius = 204; //meters
+	optional bool orbit_until_target_altitude = 205; 
+	optional bool orbit_clockwise = 206;
+}
+
+
+message Route {	
+	optional string comment = 210;
+	repeated Waypoint route = 211;
+}
+
 message DroneMessage {
 	enum FlightMode {
-		m_degraded = 0;
-		m_passThrough = 1;
-		m_flybywire = 2;
-		m_autonomous = 3;
+		m_off = 0;
+		m_degraded = 1;
+		m_passThrough = 2;
+		m_flybywire = 3;
 		m_autonomous_return_to_base = 4;
 	}
 
 	message Position {
-		optional int32 timestamp = 20;
-		optional float real_time = 21;
+		optional fixed64 timestamp = 20; //microseconds
 	
-		required float latitude = 22;
-		required float longitude = 23;
-		optional int32 gps_altitude = 25;
-		optional int32 numberOfSatellites = 26;
+		required float latitude = 22; //degrees (signed)
+		required float longitude = 23; //degrees (signed)
+		optional sfixed32 gps_altitude = 25; //centimeters ASL
+
+		optional float real_time = 21;  //UTC time [hhmmss.sss]
+		optional fixed32 number_of_satellites = 26;
 	}
 	
-	message Velocity {	
-		optional int32 timestamp = 30;
+	message GpsVelocity {	
+		required fixed64 timestamp = 30;  //microseconds
 	
-		required int32 speed = 31;
-		required int32 course_over_ground = 32;
-		optional sint32 rate_of_climb = 33;
+		required uint32 speed = 31; //cm/s
+		required uint32 course_over_ground = 32; //64*degrees
+	}
+
+	message AirVelocity {	
+		optional fixed64 timestamp = 40; //microseconds
+	
+		required uint32 speed = 41;  //cm/s
+	}
+
+	message Altitude {
+		optional fixed64 timestamp = 50; //microseconds
+
+		required int32 altitude = 51; //centimeters (relative to pressure calib)
+		optional sfixed32 rate_of_climb = 52; //centimeters per second
 	}
 	
 	message Attitude {
-		optional int32 timestamp = 40;
+		optional fixed64 timestamp = 60; //microseconds
 		
-		required sint32 course_magnetic = 41;
-		required sint32 pitch = 42;
-		required sint32 roll = 43;
+		required uint32 course_magnetic = 61; //64*degrees
+		required sint32 pitch = 62; //64*degrees
+		required sint32 roll = 63; //64*degrees
 	}
 	
 	message BaroData {
-		required int32 timestamp = 50;
+		required fixed64 timestamp = 70; //microseconds
 		
-		required float pressure = 51;
-		required float temperature = 52;
+		required fixed32 pressure = 71; //Pa * 256
+		required sfixed32 temperature = 72; //celsius * 100
 	}
 	
 	message ThreeDimensionalData {
-		required int32 timestamp = 60;
+		required fixed64 timestamp = 80;
 		
-		required float x = 61;
-		required float y = 62;
-		required float z = 63;
+		required float x = 81;
+		required float y = 82;
+		required float z = 83;
 	}
 	
 	message BatteryData {
-		optional int32 timestamp = 70;
+		optional fixed64 timestamp = 90; //microseconds
 		
-		required int32 voltage = 71;
-		required int32 current = 72;
+		required uint32 voltage = 91; //mV
+		required uint32 current = 92; //mA
 	}
 	
 	message CommandSet {
-		required int32 yaw = 80;
-		required int32 pitch = 81;
-		required int32 thrust = 82;
+		optional fixed64 timestamp = 100; //microseconds
+
+		required sint32 yaw = 101; //Realtive value, signed 8-bit integer
+		required sint32 pitch = 102; //Realtive value, signed 8-bit integer
+		required sint32 thrust = 103; //Realtive value, signed 8-bit integer
 	}
-	
+
 	message AutonomousUpdate {
-		optional int32 altitude = 90; //Centimeters
-		optional sint32 pitchAngle = 91; //Relative value, signed 8-bit integer
+			oneof verticalCommand {
+				sint32 pitch_angle = 110; //64*Degrees
+				int32 altitude = 111; //centimeters
+				sint32 rate_of_climb = 112; //centimeters/second
+			}
+			oneof horizontalCommand {
+				sint32 heading = 113; //64*degrees
+				sint32 rate_of_turn = 114; //Relative value, signed 8-bit integer
+			}
+			oneof SpeedCommand {
+				uint32 throttle = 115; //Relative value, UNsigned 8-bit integer
+				uint32 speed = 116; //Centimeters/second
+			}
+	}
 
-		optional int32 heading = 92; //64*degrees
-		optional sint32 rateOfTurn = 93; //Relative value, signed 8-bit integer
+	message CommandUpdate {
+		optional fixed64 timestamp = 120; //microseconds
+
+		oneof update {
+			CommandSet input_command_set = 121;
+			AutonomousUpdate autonomous_update = 122;
+		}
 	}
 	
-	message Waypoint {	
-		optional int32 timestamp = 100;
-	
-		required float latitude = 101;
-		required float longitude = 102;
-		required int32 altitude = 103;
+	//This is the composition of a dronemessage
+	//The same message format is used for status reports
+	//command sets from the RC controller as well as all other updated
+	//This means all messages are optional
 
-		optional uint32 orbitRadius = 104;
-		optional bool orbitUntilTargetAltitude = 105;
-		optional bool orbitClockwise = 106;
-	}
+	//First, we have a set of status messages that are only ever send
+	// form the aircraft to the ground station
+	optional fixed64 timestamp = 1;
 	
-	//A timestamp
-	optional int32 timestamp = 1;
-	
+	//Calculated status data
 	optional FlightMode current_mode = 2;
-	optional Velocity current_speed = 3;
-	optional Position current_position = 4;
-	optional Attitude current_attitude = 5;
-	optional int32 current_altitude = 6;
+	optional GpsVelocity current_groundspeed = 3;
+	optional AirVelocity current_airspeed = 4;
+	optional Position current_position = 5;
+	optional Attitude current_attitude = 6;
 	
-	optional BaroData bmp_raw = 7;
-	optional ThreeDimensionalData gyro_raw = 8;
-	optional ThreeDimensionalData mag_raw = 9;
-	optional ThreeDimensionalData accel_raw = 10;
-	optional BatteryData current_battery_data = 11;
-	optional CommandSet output_command_set = 12;
+	//Raw sensor data
+	optional BaroData static_pressure = 8;
+	optional BaroData pitot_pressure = 9;
+	optional ThreeDimensionalData gyro_raw = 10;
+	optional ThreeDimensionalData mag_raw =11;
+	optional ThreeDimensionalData accel_raw = 12;
+	optional BatteryData current_battery_data = 13;
+	optional CommandSet output_command_set = 14;
+
+	//We also echo back our currently used CommandUpdate for debugging üurposes
+	optional CommandUpdate current_command = 15;
 	
-	//Now the "input" messages
+	//Then comes a set of "input" messages that are usually
+	//send to the aircraft from the ground station
 	
 	//Control messages
-	optional CommandSet input_command_set = 13;
-	optional AutonomousUpdate autonomous_update = 14;
+	optional CommandUpdate input_command = 16;
 	
 	//Configureation updates
-	optional float sea_level_pressure = 15;
-	optional Waypoint home_base = 17;
-	
-	//The route
-	repeated Waypoint route = 18;
+	optional float sea_level_pressure = 17;
+	optional Waypoint home_base = 18;
 }

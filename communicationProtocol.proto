@@ -143,6 +143,7 @@ message DroneMessage {
 	optional GpsVelocity current_groundspeed = 3;
 	optional AirVelocity current_airspeed = 4;
 	optional Position current_position = 5;
+	optional Altitude current_altitude = 19;
 	optional Attitude current_attitude = 6;
 	
 	//Raw sensor data

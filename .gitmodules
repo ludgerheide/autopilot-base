@@ -1,3 +1,6 @@
 [submodule "flightController"]
 	path = flightController
 	url = git@github.com:ludgerheide/autopilot-flightcontroller.git
+[submodule "groundControl"]
+	path = groundControl
+	url = git@github.com:ludgerheide/autopilot-groundcontrol.git

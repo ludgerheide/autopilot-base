@@ -104,28 +104,21 @@ message DroneMessage {
 		required sint32 thrust = 103; //Realtive value, signed 8-bit integer
 	}
 
-	message AutonomousUpdate {
-			oneof verticalCommand {
-				sint32 pitch_angle = 110; //64*Degrees
-				int32 altitude = 111; //centimeters
-				sint32 rate_of_climb = 112; //centimeters/second
-			}
-			oneof horizontalCommand {
-				sint32 heading = 113; //64*degrees
-				sint32 rate_of_turn = 114; //Relative value, signed 8-bit integer
-			}
-			oneof SpeedCommand {
-				uint32 throttle = 115; //Relative value, UNsigned 8-bit integer
-				uint32 speed = 116; //Centimeters/second
-			}
-	}
-
 	message CommandUpdate {
 		optional fixed64 timestamp = 120; //microseconds
 
-		oneof update {
-			CommandSet input_command_set = 121;
-			AutonomousUpdate autonomous_update = 122;
+		oneof verticalCommand {
+			sint32 pitch_angle = 110; //64*Degrees
+			int32 altitude = 111; //centimeters
+			sint32 rate_of_climb = 112; //centimeters/second
+		}
+		oneof horizontalCommand {
+			sint32 heading = 113; //64*degrees
+			sint32 rate_of_turn = 114; //Relative value, signed 8-bit integer
+		}
+		oneof SpeedCommand {
+			uint32 throttle = 115; //Relative value, UNsigned 8-bit integer
+			uint32 speed = 116; //Centimeters/second
 		}
 	}
 	

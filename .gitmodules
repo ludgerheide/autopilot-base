@@ -4,3 +4,6 @@
 [submodule "groundControl"]
 	path = groundControl
 	url = git@github.com:ludgerheide/autopilot-groundcontrol.git
+[submodule "serialConnector"]
+	path = serialConnector
+	url = git@github.com:ludgerheide/autopilot-serialconnector.git

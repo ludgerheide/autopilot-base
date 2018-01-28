@@ -15,7 +15,7 @@ message Waypoint {
 	required float longitude = 202; //Degrees
 	required int32 altitude = 203;  //centimeters
 
-	optional uint32 orbit_radius = 204; //meters
+	optional uint32 orbit_radius = 204; //centimeters
 	optional bool orbit_until_target_altitude = 205; 
 	optional bool orbit_clockwise = 206;
 }
@@ -102,13 +102,14 @@ message DroneMessage {
 		required sint32 yaw = 101; //Realtive value, signed 8-bit integer
 		required sint32 pitch = 102; //Realtive value, signed 8-bit integer
 		required sint32 thrust = 103; //Realtive value, signed 8-bit integer
+		optional sint32 roll = 104;
 	}
 
 	message CommandUpdate {
 		optional fixed64 timestamp = 120; //microseconds
 
 		oneof verticalCommand {
-			sint32 pitch_angle = 110; //64*Degrees
+			sint32 pitch_angle = 110; //Relative value, signed 8-bit integer
 			int32 altitude = 111; //centimeters
 			sint32 rate_of_climb = 112; //centimeters/second
 		}

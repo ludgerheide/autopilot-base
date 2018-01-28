@@ -102,6 +102,7 @@ message DroneMessage {
 		required sint32 yaw = 101; //Realtive value, signed 8-bit integer
 		required sint32 pitch = 102; //Realtive value, signed 8-bit integer
 		required sint32 thrust = 103; //Realtive value, signed 8-bit integer
+		optional sint32 roll = 104;
 	}
 
 	message CommandUpdate {

@@ -7,3 +7,6 @@
 [submodule "serialConnector"]
 	path = serialConnector
 	url = git@github.com:ludgerheide/autopilot-serialconnector.git
+[submodule "navigator"]
+	path = navigator
+	url = git@github.com:ludgerheide/autopilot-navigator.git
